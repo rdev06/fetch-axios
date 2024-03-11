@@ -1,0 +1,7 @@
+.git
+src
+node_modules
+jest.config.json
+tsconfig.json
+build.js
+example.js
