@@ -96,8 +96,21 @@ export default class FetchAxios implements IHttpClient {
     return toReturn;
   }
 
-  private async performFetch<T>(url: RequestInfo | URL, options?: IHttpOption<T>, method?: HTTP_METHOD, data?: any): Promise<IHttpClientResponse<T>> {
-    const request = new Request(url, { ...(options || {}), method, body: data });
+  private async performFetch<T>(url: RequestInfo | URL, options: IHttpOption<T>, method?: HTTP_METHOD, data?: any): Promise<IHttpClientResponse<T>> {
+    const init: RequestInit = Object.assign(options, {body: data});
+    if(method){
+      init.method = method;
+    }
+    if(!init.headers){
+      init.headers = {};
+    }
+
+    if(typeof data === 'object' || options.headers?.['Content-Type'] === 'application/json'){
+      options.headers['Content-Type'] = 'application/json';
+      init.body = JSON.stringify(data);
+    }
+
+    const request = new Request(url, init);
     const processedRequest = await this.processRequest(request);
 
     try {
