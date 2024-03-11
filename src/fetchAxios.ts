@@ -20,6 +20,10 @@ export interface IHttpOption<T = any> extends RequestInit {
   responseDataType?: T;
 }
 
+export interface IRequest<T = any> extends IHttpOption {
+  url: RequestInfo | URL;
+}
+
 export interface IHttpClientResponse<T = any> extends Response {
   data: T;
 }
@@ -32,7 +36,7 @@ export interface IHttpClient {
   patch<T = any>(url: RequestInfo | URL, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
   put<T = any>(url: RequestInfo | URL, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
   delete<T = any>(url: RequestInfo | URL, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
-  request<T = any>(options: IHttpOption<T> & { url: RequestInfo | URL }): Promise<IHttpClientResponse<T>>;
+  request<T = any>(options: IRequest<T>): Promise<IHttpClientResponse<T>>;
   interceptors: {
     request: { use: (interceptor: CallBackFn) => void };
     response: { use: (interceptor: CallBackFn) => void };
