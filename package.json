@@ -1,0 +1,27 @@
+{
+  "name": "@rdev06/fetch-axios",
+  "version": "1.0.0",
+  "description": "This is wrapper around fetch module to mimic same behavour like axios",
+  "main": "dist/index.js",
+  "types": "@types/fetch-axios.d.ts",
+  "type": "module",
+  "scripts": {
+    "postinstall":"tsc && bun run build.js",
+    "build": "rm -rf ./dist && yarn run postinstall",
+    "test": "jest",
+    "prepublishOnly": "bun run build",
+    "postpublish": "rm -rf ./dist"
+  },
+  "keywords": [
+    "fetch",
+    "axios"
+  ],
+  "author": "Roshan Dev",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3"
+  }
+}
