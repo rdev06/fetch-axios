@@ -1,4 +1,4 @@
-import FetchAxios, { HTTP_RESPONSE_TYPE, IRequest } from './fetchAxios';
+import FetchAxios, { HTTP_METHOD, HTTP_RESPONSE_TYPE, IRequest } from './fetchAxios';
 const axios = new FetchAxios();
 
 global.fetch = jest.fn(() => Promise.resolve(new Response(JSON.stringify({ data: 'mocked response' }), { status: 200 })));
@@ -24,7 +24,7 @@ describe('HttpClient', () => {
   it('should make a GET request from .request method', async () => {
     const option: IRequest = {
       url: 'https://jsonplaceholder.typicode.com/todos/1',
-      method: 'GET',
+      method: HTTP_METHOD.GET,
       responseType: HTTP_RESPONSE_TYPE.json,
     };
     const response = await axios.request(option);

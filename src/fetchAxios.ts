@@ -15,13 +15,14 @@ export const enum HTTP_RESPONSE_TYPE {
   text = 'text'
 }
 
-export interface IHttpOption<T = any> extends RequestInit {
+export interface IHttpOption<T = any> extends Omit<RequestInit, 'body'> {
   responseType: HTTP_RESPONSE_TYPE;
   responseDataType?: T;
 }
 
 export interface IRequest<T = any> extends IHttpOption {
   url: RequestInfo | URL;
+  data?: RequestInit['body']
 }
 
 export interface IHttpClientResponse<T = any> extends Response {
@@ -95,8 +96,8 @@ export default class FetchAxios implements IHttpClient {
     return toReturn;
   }
 
-  private async performFetch<T>(url: RequestInfo | URL, options?: IHttpOption<T>, method?: HTTP_METHOD, body?: any): Promise<IHttpClientResponse<T>> {
-    const request = new Request(url, { ...(options || {}), method, body });
+  private async performFetch<T>(url: RequestInfo | URL, options?: IHttpOption<T>, method?: HTTP_METHOD, data?: any): Promise<IHttpClientResponse<T>> {
+    const request = new Request(url, { ...(options || {}), method, body: data });
     const processedRequest = await this.processRequest(request);
 
     try {
@@ -112,23 +113,23 @@ export default class FetchAxios implements IHttpClient {
     return this.performFetch(url, options, HTTP_METHOD.GET);
   }
 
-  public async post<T = any>(url: RequestInfo | URL, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
-    return this.performFetch(url, options, HTTP_METHOD.POST, body);
+  public async post<T = any>(url: RequestInfo | URL, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
+    return this.performFetch(url, options, HTTP_METHOD.POST, data);
   }
 
-  public async patch<T = any>(url: RequestInfo | URL, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
-    return this.performFetch(url, options, HTTP_METHOD.PATCH, body);
+  public async patch<T = any>(url: RequestInfo | URL, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
+    return this.performFetch(url, options, HTTP_METHOD.PATCH, data);
   }
 
-  public async put<T = any>(url: RequestInfo | URL, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
-    return this.performFetch(url, options, HTTP_METHOD.PUT, body);
+  public async put<T = any>(url: RequestInfo | URL, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
+    return this.performFetch(url, options, HTTP_METHOD.PUT, data);
   }
 
-  public async delete<T = any>(url: RequestInfo | URL, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
-    return this.performFetch(url, options, HTTP_METHOD.DELETE);
+  public async delete<T = any>(url: RequestInfo | URL, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
+    return this.performFetch(url, options, HTTP_METHOD.DELETE, data);
   }
 
-  public async request<T = any>(options: IHttpOption<T> & { url: RequestInfo | URL }): Promise<IHttpClientResponse<T>> {
-    return this.performFetch(options.url, options, options.method as HTTP_METHOD);
+  public async request<T = any>(options: IRequest<T>): Promise<IHttpClientResponse<T>> {
+    return this.performFetch(options.url, options, options.method as HTTP_METHOD, options.data);
   }
 }
