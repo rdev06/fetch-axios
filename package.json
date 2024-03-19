@@ -6,8 +6,8 @@
   "types": "@types/fetch-axios.d.ts",
   "type": "module",
   "scripts": {
-    "postinstall":"tsc && bun run build.js",
-    "build": "rm -rf ./dist && yarn run postinstall",
+    "postbuild":"tsc && bun run build.js",
+    "build": "rm -rf ./dist && yarn run postbuild",
     "test": "jest",
     "prepublishOnly": "bun run build",
     "postpublish": "rm -rf ./dist"
