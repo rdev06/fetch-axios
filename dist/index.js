@@ -1,0 +1,1 @@
+import{a as l} from"./fetchAxios.js";var m=(q,I,j)=>{return Object.getOwnPropertyNames(I).forEach((u)=>{if(u==="constructor")return;if(j)q[u]=I[u].bind(j);else q[u]=I[u]}),q},R=new l,f=l.prototype.request.bind(R);m(f,l.prototype,R);m(f,R,null);var B=f;export{B as default};

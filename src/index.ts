@@ -1,4 +1,4 @@
-import FetchAxios from './fetchAxios';
+import FetchAxios, { IRequest } from './fetchAxios';
 
 const extend = (a: any, b: any, thisArg: any) => {
   const keys = Object.getOwnPropertyNames(b);
@@ -16,8 +16,8 @@ const extend = (a: any, b: any, thisArg: any) => {
 };
 
 const instance = new FetchAxios();
-const axios = FetchAxios.prototype.request.bind(instance);
+const axios: IRequest = FetchAxios.prototype.request.bind(instance);
 extend(axios, FetchAxios.prototype, instance);
 extend(axios, instance, null);
 
-export default axios;
+export default axios as IRequest;
