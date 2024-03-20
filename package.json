@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "This is wrapper around fetch module to mimic same behavour like axios",
   "main": "dist/index.js",
-  "types": "@types/fetch-axios.d.ts",
   "type": "module",
   "scripts": {
     "postbuild":"tsc && bun run build.js",
