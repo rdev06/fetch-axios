@@ -1,4 +1,4 @@
-import FetchAxios, { IHttpClientResponse, IRequest } from './fetchAxios';
+import FetchAxios, { IHttpClient, IHttpClientResponse, IRequest } from './fetchAxios';
 
 const extend = (a: any, b: any, thisArg: any) => {
   const keys = Object.getOwnPropertyNames(b);
@@ -15,8 +15,10 @@ const extend = (a: any, b: any, thisArg: any) => {
   return a;
 };
 
+type TAxios = ((options: IRequest) => Promise<IHttpClientResponse>) & IHttpClient;
+
 const instance = new FetchAxios();
-const axios: (options: IRequest) => Promise<IHttpClientResponse> = FetchAxios.prototype.request.bind(instance);
+const axios: TAxios = FetchAxios.prototype.request.bind(instance);
 extend(axios, FetchAxios.prototype, instance);
 extend(axios, instance, null);
 
