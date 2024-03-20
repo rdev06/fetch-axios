@@ -8,6 +8,7 @@ export declare const enum HTTP_METHOD {
 export declare const enum HTTP_RESPONSE_TYPE {
     arrayBuffer = "arrayBuffer",
     arraybuffer = "arraybuffer",
+    stream = "stream",
     json = "json",
     blob = "blob",
     formData = "formData",

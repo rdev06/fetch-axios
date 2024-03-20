@@ -9,6 +9,7 @@ export const enum HTTP_METHOD {
 export const enum HTTP_RESPONSE_TYPE {
   arrayBuffer = 'arrayBuffer',
   arraybuffer = 'arraybuffer',
+  stream = 'stream',
   json = 'json',
   blob = 'blob',
   formData = 'formData',
@@ -22,7 +23,7 @@ export interface IHttpOption<T = any> extends Omit<RequestInit, 'body'> {
 
 export interface IRequest<T = any> extends IHttpOption {
   url: RequestInfo | URL;
-  data?: RequestInit['body']
+  data?: RequestInit['body'];
 }
 
 export interface IHttpClientResponse<T = any> extends Response {
@@ -67,7 +68,7 @@ export default class FetchAxios implements IHttpClient {
     }
     const configKeys = Object.keys(request);
     for (const k of configKeys) {
-        this.reqConfig[k] = request[k];
+      this.reqConfig[k] = request[k];
     }
     return request;
   }
@@ -76,17 +77,27 @@ export default class FetchAxios implements IHttpClient {
     let data: T | undefined | null = null;
     if (response.ok) {
       if (options?.responseType) {
-        if(options.responseType === HTTP_RESPONSE_TYPE.arraybuffer){
+        if (options.responseType === HTTP_RESPONSE_TYPE.arraybuffer) {
           //@ts-ignore
-          data = Buffer.from(await response.arrayBuffer())
-        }else{
+          data = Buffer.from(await response.arrayBuffer());
+        } else if (options.responseType === HTTP_RESPONSE_TYPE.stream) {
+          //@ts-ignore
+          data = response.body;
+        } else {
           data = await response[options.responseType]();
         }
       } else {
         data = await response.json();
       }
     }
-    let toReturn: IHttpClientResponse<T> | any = { data, headers: {}, ok: response.ok, status: response.status, config: this.reqConfig, statusText: response.statusText };
+    let toReturn: IHttpClientResponse<T> | any = {
+      data,
+      headers: {},
+      ok: response.ok,
+      status: response.status,
+      config: this.reqConfig,
+      statusText: response.statusText
+    };
     response.headers.forEach((value, name) => {
       toReturn.headers[name] = value;
     });
@@ -97,15 +108,15 @@ export default class FetchAxios implements IHttpClient {
   }
 
   private async performFetch<T>(url: RequestInfo | URL, options: IHttpOption<T>, method?: HTTP_METHOD, data?: any): Promise<IHttpClientResponse<T>> {
-    const init: RequestInit = Object.assign(options, {body: data});
-    if(method){
+    const init: RequestInit = Object.assign(options, { body: data });
+    if (method) {
       init.method = method;
     }
-    if(!init.headers){
+    if (!init.headers) {
       init.headers = {};
     }
 
-    if(typeof data === 'object' || options.headers?.['Content-Type'] === 'application/json'){
+    if (typeof data === 'object' || options.headers?.['Content-Type'] === 'application/json') {
       options.headers['Content-Type'] = 'application/json';
       init.body = JSON.stringify(data);
     }

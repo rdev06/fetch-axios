@@ -1,3 +1,3 @@
-import { IRequest } from './fetchAxios';
-declare const _default: IRequest<any>;
-export default _default;
+import { IHttpClientResponse, IRequest } from './fetchAxios';
+declare const axios: (options: IRequest) => Promise<IHttpClientResponse>;
+export default axios;

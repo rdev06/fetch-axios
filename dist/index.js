@@ -1,1 +1,1 @@
-import{a as l} from"./fetchAxios.js";var m=(q,I,j)=>{return Object.getOwnPropertyNames(I).forEach((u)=>{if(u==="constructor")return;if(j)q[u]=I[u].bind(j);else q[u]=I[u]}),q},R=new l,f=l.prototype.request.bind(R);m(f,l.prototype,R);m(f,R,null);var B=f;export{B as default};
+import{a as u} from"./fetchAxios.js";var q=(R,f,p)=>{return Object.getOwnPropertyNames(f).forEach((l)=>{if(l==="constructor")return;if(p)R[l]=f[l].bind(p);else R[l]=f[l]}),R},j=new u,m=u.prototype.request.bind(j);q(m,u.prototype,j);q(m,j,null);var D=m;export{D as default};
