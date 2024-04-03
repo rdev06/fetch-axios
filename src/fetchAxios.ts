@@ -73,7 +73,7 @@ export default class FetchAxios implements IHttpClient {
     return request;
   }
 
-  private async processResponse<T>(response: Response, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
+  private async processResponse<T>(response: Response & {data?: any}, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
     let data: T | undefined | null = null;
     if (response.ok) {
       if (options?.responseType) {
@@ -104,6 +104,10 @@ export default class FetchAxios implements IHttpClient {
     for (const interceptor of this.responseInterceptors) {
       toReturn = await interceptor(toReturn);
     }
+    if(!response.ok){
+      toReturn.data = response.data || await response.json();
+      throw {error: toReturn}
+    }
     return toReturn;
   }
 
@@ -129,7 +133,19 @@ export default class FetchAxios implements IHttpClient {
       response.request = processedRequest;
       return this.processResponse<T>(response, options);
     } catch (error) {
-      throw error;
+      return this.processResponse({
+        ok: false,
+        //@ts-ignore
+        headers: [],
+        status: 500,
+        statusText: 'Error',
+        data: {
+          message: error.message,
+          name: error.name,
+          code: error.code,
+          path: error.path,
+        }
+      }, options) as unknown as IHttpClientResponse<T>
     }
   }
 

@@ -5,8 +5,7 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "postbuild":"tsc && bun run build.js",
-    "build": "rm -rf ./dist && yarn run postbuild",
+    "build": "rm -rf ./dist && tsc && bun run build.js",
     "test": "jest",
     "prepublishOnly": "bun run build",
     "postpublish": "rm -rf ./dist"
