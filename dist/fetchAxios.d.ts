@@ -56,7 +56,7 @@ export default class FetchAxios implements IHttpClient {
     };
     private processRequest;
     private processResponse;
-    private handelError;
+    private handelUnknownResponse;
     private performFetch;
     get<T = any>(url: RequestInfo | URL, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
     post<T = any>(url: RequestInfo | URL, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;

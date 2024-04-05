@@ -76,20 +76,16 @@ export default class FetchAxios implements IHttpClient {
   private async processResponse<T>(response: Response & { data?: any }, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
     let data: any = null;
     if (response.ok) {
-      try {
-        if (options?.responseType) {
-          if (options.responseType === HTTP_RESPONSE_TYPE.arraybuffer) {
-            data = Buffer.from(await response.arrayBuffer());
-          } else if (options.responseType === HTTP_RESPONSE_TYPE.stream) {
-            data = response.body;
-          } else {
-            data = await response[options.responseType]();
-          }
+      if (options?.responseType) {
+        if (options.responseType === HTTP_RESPONSE_TYPE.arraybuffer) {
+          data = Buffer.from(await response.arrayBuffer());
+        } else if (options.responseType === HTTP_RESPONSE_TYPE.stream) {
+          data = response.body;
         } else {
-          data = await response.json();
+          data = await response[options.responseType]();
         }
-      } catch (error) {
-        data = await this.handelError(response);
+      } else {
+        data = await this.handelUnknownResponse(response);
       }
     }
     let toReturn: IHttpClientResponse<T> | any = {
@@ -107,13 +103,13 @@ export default class FetchAxios implements IHttpClient {
       toReturn = await interceptor(toReturn);
     }
     if (!response.ok) {
-      toReturn.data = response.data || (await this.handelError(response));
-      throw { response: toReturn, message: toReturn.statusText || 'Interbal Server Error' };
+      toReturn.data = response.data || (await this.handelUnknownResponse(response));
+      throw { response: toReturn, message: toReturn.statusText || 'Internal Server Error' };
     }
     return toReturn;
   }
 
-  private async handelError(response: Response) {
+  private async handelUnknownResponse(response: Response) {
     let text = await response.text();
     try {
       text = JSON.parse(text);
