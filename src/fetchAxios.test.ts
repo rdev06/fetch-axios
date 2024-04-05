@@ -14,11 +14,12 @@ describe('For error scenarios', () => {
   });
 
   it('status code 500 with text response', async () => {
-    global.fetch = jest.fn(()=> Promise.resolve(new Response(`<html></html>`, {status: 404})))
+    const text = `<html></html>`
+    global.fetch = jest.fn(()=> Promise.resolve(new Response(text, {status: 404})))
     try {
       await axios.get('https://jsonplaceholder.typicode.com');
     } catch (error) {
-      expect(error.response.data).toBeNull();
+      expect(error.response.data).toBe(text);
     }
   })
 })

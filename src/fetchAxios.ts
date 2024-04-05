@@ -108,21 +108,19 @@ export default class FetchAxios implements IHttpClient {
     }
     if (!response.ok) {
       toReturn.data = response.data || (await this.handelError(response));
-      throw { response: toReturn };
+      throw { response: toReturn, message: toReturn.statusText || 'Interbal Server Error' };
     }
     return toReturn;
   }
 
   private async handelError(response: Response) {
+    let text = await response.text();
     try {
-      return await response.json();
+      text = JSON.parse(text);
     } catch (e) {
-      try {
-        return await response.text();
-      } catch (e) {
-        return null;
-      }
+      // do nothing
     }
+    return text;
   }
 
   private async performFetch<T>(
