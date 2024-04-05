@@ -74,15 +74,13 @@ export default class FetchAxios implements IHttpClient {
   }
 
   private async processResponse<T>(response: Response & { data?: any }, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
-    let data: T | undefined | null = null;
+    let data: any = null;
     if (response.ok) {
       try {
         if (options?.responseType) {
           if (options.responseType === HTTP_RESPONSE_TYPE.arraybuffer) {
-            //@ts-ignore
             data = Buffer.from(await response.arrayBuffer());
           } else if (options.responseType === HTTP_RESPONSE_TYPE.stream) {
-            //@ts-ignore
             data = response.body;
           } else {
             data = await response[options.responseType]();
@@ -91,7 +89,7 @@ export default class FetchAxios implements IHttpClient {
           data = await response.json();
         }
       } catch (error) {
-        // nothing to do
+        data = await this.handelError(response);
       }
     }
     let toReturn: IHttpClientResponse<T> | any = {
@@ -109,10 +107,22 @@ export default class FetchAxios implements IHttpClient {
       toReturn = await interceptor(toReturn);
     }
     if (!response.ok) {
-      toReturn.data = response.data || (await response.json());
+      toReturn.data = response.data || (await this.handelError(response));
       throw { response: toReturn };
     }
     return toReturn;
+  }
+
+  private async handelError(response: Response) {
+    try {
+      return await response.json();
+    } catch (e) {
+      try {
+        return await response.text();
+      } catch (e) {
+        return null;
+      }
+    }
   }
 
   private async performFetch<T>(

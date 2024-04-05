@@ -1,13 +1,35 @@
 import FetchAxios, { HTTP_METHOD, HTTP_RESPONSE_TYPE, IRequest } from './fetchAxios';
 const axios = new FetchAxios();
 
-global.fetch = jest.fn(() => Promise.resolve(new Response(JSON.stringify({ data: 'mocked response' }), { status: 200 })));
+const originalFetch = global.fetch;
 
-describe('HttpClient', () => {
+
+describe('For error scenarios', () => {
+  it('status code 500 without mocked response', async () => {
+    try {
+      await axios.get('https://jsonaceholde.typicode.com');
+    } catch (error) {
+      expect(error.response.data.message).toBe('fetch failed')
+    }
+  });
+
+  it('status code 500 with text response', async () => {
+    global.fetch = jest.fn(()=> Promise.resolve(new Response(`<html></html>`, {status: 404})))
+    try {
+      await axios.get('https://jsonplaceholder.typicode.com');
+    } catch (error) {
+      expect(error.response.data).toBeNull();
+    }
+    global.fetch = originalFetch;
+  })
+})
+
+describe('for success scenario', () => {
   let mockRequestInterceptor: jest.Mock;
   let mockResponseInterceptor: jest.Mock;
 
   beforeEach(() => {
+    global.fetch = jest.fn(() => Promise.resolve(new Response(JSON.stringify({ data: 'mocked response' }), { status: 200 })));
     mockRequestInterceptor = jest.fn(() => ({}));
     mockResponseInterceptor = jest.fn(()=>({data:{data: 'mocked response'}}));
   });
@@ -50,4 +72,7 @@ describe('HttpClient', () => {
 
     expect(mockInterceptor).toHaveBeenCalled();
   });
+
+  // global.fetch = jest.fn(() => Promise.resolve(new Response('mocked error', { status: 500 })));
+
 });
