@@ -20,16 +20,16 @@ describe('For error scenarios', () => {
     } catch (error) {
       expect(error.response.data).toBeNull();
     }
-    global.fetch = originalFetch;
   })
 })
 
 describe('for success scenario', () => {
   let mockRequestInterceptor: jest.Mock;
   let mockResponseInterceptor: jest.Mock;
-
-  beforeEach(() => {
+  beforeAll(() => {
     global.fetch = jest.fn(() => Promise.resolve(new Response(JSON.stringify({ data: 'mocked response' }), { status: 200 })));
+  })
+  beforeEach(() => {
     mockRequestInterceptor = jest.fn(() => ({}));
     mockResponseInterceptor = jest.fn(()=>({data:{data: 'mocked response'}}));
   });
@@ -72,7 +72,4 @@ describe('for success scenario', () => {
 
     expect(mockInterceptor).toHaveBeenCalled();
   });
-
-  // global.fetch = jest.fn(() => Promise.resolve(new Response('mocked error', { status: 500 })));
-
 });
