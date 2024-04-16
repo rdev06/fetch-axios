@@ -1,2 +1,147 @@
-var b;(function(C){C["POST"]="POST";C["GET"]="GET";C["PATCH"]="PATCH";C["PUT"]="PUT";C["DELETE"]="DELETE"})(b||(b={}));var w;(function(A){A["arrayBuffer"]="arrayBuffer";A["arraybuffer"]="arraybuffer";A["stream"]="stream";A["json"]="json";A["blob"]="blob";A["formData"]="formData";A["text"]="text"})(w||(w={}));class B{requestInterceptors=[];responseInterceptors=[];reqConfig={};interceptors={request:{use:(f)=>{this.requestInterceptors.push(f)}},response:{use:(f)=>{this.responseInterceptors.push(f)}}};async processRequest(f){for(let j of this.requestInterceptors)f=await j(f);const I=Object.keys(f);for(let j of I)this.reqConfig[j]=f[j];return f}async processResponse(f,I){let j=null;if(f.ok)if(I?.responseType)if(I.responseType===w.arraybuffer)j=Buffer.from(await f.arrayBuffer());else if(I.responseType===w.stream)j=f.body;else j=await f[I.responseType]();else j=await this.handelUnknownResponse(f);let F={data:j,headers:{},ok:f.ok,status:f.status,config:this.reqConfig,statusText:f.statusText};f.headers.forEach((L,C)=>{F.headers[C]=L});for(let L of this.responseInterceptors)F=await L(F);if(!f.ok)throw F.data=f.data||await this.handelUnknownResponse(f),{response:F,message:F.statusText||"Internal Server Error"};return F}async handelUnknownResponse(f){let I=await f.text();try{I=JSON.parse(I)}catch(j){}return I}async performFetch(f,I={responseType:w.json},j,F){const L=Object.assign(I,{body:F});if(j)L.method=j;if(!L.headers)L.headers={};if(typeof F==="object"||I.headers?.["Content-Type"]==="application/json")I.headers["Content-Type"]="application/json",L.body=JSON.stringify(F);const C=new Request(f,L),z=await this.processRequest(C);try{const A=await fetch(z);return A.request=z,this.processResponse(A,I)}catch(A){return this.processResponse({ok:!1,headers:[],status:500,statusText:"Error",data:{message:A.message,name:A.name,code:A.code,path:A.path}},I)}}async get(f,I){return this.performFetch(f,I,b.GET)}async post(f,I,j){return this.performFetch(f,j,b.POST,I)}async patch(f,I,j){return this.performFetch(f,j,b.PATCH,I)}async put(f,I,j){return this.performFetch(f,j,b.PUT,I)}async delete(f,I,j){return this.performFetch(f,j,b.DELETE,I)}async request(f){return this.performFetch(f.url,f,f.method,f.data)}}export{B as default,w as HTTP_RESPONSE_TYPE,b as HTTP_METHOD};
-export{B as a};
+// src/fetchAxios.ts
+var HTTP_METHOD;
+(function(HTTP_METHOD2) {
+  HTTP_METHOD2["POST"] = "POST";
+  HTTP_METHOD2["GET"] = "GET";
+  HTTP_METHOD2["PATCH"] = "PATCH";
+  HTTP_METHOD2["PUT"] = "PUT";
+  HTTP_METHOD2["DELETE"] = "DELETE";
+})(HTTP_METHOD || (HTTP_METHOD = {}));
+var HTTP_RESPONSE_TYPE;
+(function(HTTP_RESPONSE_TYPE2) {
+  HTTP_RESPONSE_TYPE2["arrayBuffer"] = "arrayBuffer";
+  HTTP_RESPONSE_TYPE2["arraybuffer"] = "arraybuffer";
+  HTTP_RESPONSE_TYPE2["stream"] = "stream";
+  HTTP_RESPONSE_TYPE2["json"] = "json";
+  HTTP_RESPONSE_TYPE2["blob"] = "blob";
+  HTTP_RESPONSE_TYPE2["formData"] = "formData";
+  HTTP_RESPONSE_TYPE2["text"] = "text";
+})(HTTP_RESPONSE_TYPE || (HTTP_RESPONSE_TYPE = {}));
+
+class FetchAxios {
+  requestInterceptors = [];
+  responseInterceptors = [];
+  reqConfig = {};
+  interceptors = {
+    request: {
+      use: (interceptor) => {
+        this.requestInterceptors.push(interceptor);
+      }
+    },
+    response: {
+      use: (interceptor) => {
+        this.responseInterceptors.push(interceptor);
+      }
+    }
+  };
+  async processRequest(request) {
+    for (const interceptor of this.requestInterceptors) {
+      request = await interceptor(request);
+    }
+    const configKeys = Object.keys(request);
+    for (const k of configKeys) {
+      this.reqConfig[k] = request[k];
+    }
+    return request;
+  }
+  async processResponse(response, options) {
+    let data = null;
+    if (response.ok) {
+      if (options?.responseType) {
+        if (options.responseType === HTTP_RESPONSE_TYPE.arraybuffer) {
+          data = Buffer.from(await response.arrayBuffer());
+        } else if (options.responseType === HTTP_RESPONSE_TYPE.stream) {
+          data = response.body;
+        } else {
+          data = await response[options.responseType]();
+        }
+      } else {
+        data = await this.handelUnknownResponse(response);
+      }
+    }
+    let toReturn = {
+      data,
+      headers: {},
+      ok: response.ok,
+      status: response.status,
+      config: this.reqConfig,
+      statusText: response.statusText
+    };
+    response.headers.forEach((value, name) => {
+      toReturn.headers[name] = value;
+    });
+    for (const interceptor of this.responseInterceptors) {
+      toReturn = await interceptor(toReturn);
+    }
+    if (!response.ok) {
+      toReturn.data = response.data || await this.handelUnknownResponse(response);
+      throw { response: toReturn, message: toReturn.statusText || "Internal Server Error" };
+    }
+    return toReturn;
+  }
+  async handelUnknownResponse(response) {
+    let text = await response.text();
+    try {
+      text = JSON.parse(text);
+    } catch (e) {
+    }
+    return text;
+  }
+  async performFetch(url, options = { responseType: HTTP_RESPONSE_TYPE.json }, method, data) {
+    const init = Object.assign(options, { body: data });
+    if (method) {
+      init.method = method;
+    }
+    if (!init.headers) {
+      init.headers = {};
+    }
+    if (typeof data === "object" || options.headers?.["Content-Type"] === "application/json") {
+      options.headers["Content-Type"] = "application/json";
+      init.body = JSON.stringify(data);
+    }
+    const request = new Request(url, init);
+    const processedRequest = await this.processRequest(request);
+    try {
+      const response = await fetch(processedRequest, options);
+      return this.processResponse(response, options);
+    } catch (error) {
+      return this.processResponse({
+        ok: false,
+        headers: [],
+        status: 500,
+        statusText: "Error",
+        data: {
+          message: error.message,
+          name: error.name,
+          code: error.code,
+          path: error.path
+        }
+      }, options);
+    }
+  }
+  async get(url, options) {
+    return this.performFetch(url, options, HTTP_METHOD.GET);
+  }
+  async post(url, data, options) {
+    return this.performFetch(url, options, HTTP_METHOD.POST, data);
+  }
+  async patch(url, data, options) {
+    return this.performFetch(url, options, HTTP_METHOD.PATCH, data);
+  }
+  async put(url, data, options) {
+    return this.performFetch(url, options, HTTP_METHOD.PUT, data);
+  }
+  async delete(url, data, options) {
+    return this.performFetch(url, options, HTTP_METHOD.DELETE, data);
+  }
+  async request(options) {
+    return this.performFetch(options.url, options, options.method, options.data);
+  }
+}
+export {
+  FetchAxios as default,
+  HTTP_RESPONSE_TYPE,
+  HTTP_METHOD
+};
+
+export { FetchAxios };

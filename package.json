@@ -22,5 +22,7 @@
     "postpublish": "rm -rf ./dist"
   },
   "type": "module",
-  "dependencies": {}
+  "dependencies": {
+    "undici": "^6.13.0"
+  }
 }

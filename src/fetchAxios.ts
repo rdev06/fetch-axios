@@ -19,7 +19,7 @@ export const enum HTTP_RESPONSE_TYPE {
 export interface IHttpOption<T = any> extends Omit<RequestInit, 'body'> {
   responseType: HTTP_RESPONSE_TYPE;
   responseDataType?: T;
-  dispatcher?: new (arg:{connect:{rejectUnauthorized: boolean}}) => T
+  dispatcher?: any
 }
 
 export interface IRequest<T = any> extends IHttpOption {
@@ -143,8 +143,7 @@ export default class FetchAxios implements IHttpClient {
     const processedRequest = await this.processRequest(request);
 
     try {
-      const response: any = await fetch(processedRequest);
-      response.request = processedRequest;
+      const response: any = await fetch(processedRequest, options);
       return this.processResponse<T>(response, options);
     } catch (error) {
       return this.processResponse(

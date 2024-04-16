@@ -17,15 +17,11 @@ export declare const enum HTTP_RESPONSE_TYPE {
 export interface IHttpOption<T = any> extends Omit<RequestInit, 'body'> {
     responseType: HTTP_RESPONSE_TYPE;
     responseDataType?: T;
+    dispatcher?: any;
 }
 export interface IRequest<T = any> extends IHttpOption {
     url: RequestInfo | URL;
     data?: RequestInit['body'];
-    dispatcher?: new (arg: {
-        connect: {
-            rejectUnauthorized: boolean;
-        };
-    }) => T;
 }
 export interface IHttpClientResponse<T = any> extends Response {
     data: T;

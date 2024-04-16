@@ -4,6 +4,6 @@ await Bun.build({
     target: 'node',
     format: 'esm',
     splitting: true,
-    minify: true
+    minify: false
   });
   

@@ -1,1 +1,27 @@
-import{a as u} from"./fetchAxios.js";var v=(f,p,q)=>{return Object.getOwnPropertyNames(p).forEach((l)=>{if(l==="constructor")return;if(q)f[l]=p[l].bind(q);else f[l]=p[l]}),f},j=new u,m=u.prototype.request.bind(j);v(m,u.prototype,j);v(m,j,null);var G=m;export{G as default};
+import {
+FetchAxios
+} from "./fetchAxios.js";
+
+// src/index.ts
+var extend = (a, b, thisArg) => {
+  const keys = Object.getOwnPropertyNames(b);
+  keys.forEach((key) => {
+    if (key === "constructor") {
+      return;
+    }
+    if (thisArg) {
+      a[key] = b[key].bind(thisArg);
+    } else {
+      a[key] = b[key];
+    }
+  });
+  return a;
+};
+var instance = new FetchAxios;
+var axios = FetchAxios.prototype.request.bind(instance);
+extend(axios, FetchAxios.prototype, instance);
+extend(axios, instance, null);
+var src_default = axios;
+export {
+  src_default as default
+};
