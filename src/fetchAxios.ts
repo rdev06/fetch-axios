@@ -19,6 +19,7 @@ export const enum HTTP_RESPONSE_TYPE {
 export interface IHttpOption<T = any> extends Omit<RequestInit, 'body'> {
   responseType: HTTP_RESPONSE_TYPE;
   responseDataType?: T;
+  dispatcher?: new (arg:{connect:{rejectUnauthorized: boolean}}) => T
 }
 
 export interface IRequest<T = any> extends IHttpOption {

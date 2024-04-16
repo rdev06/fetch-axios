@@ -21,6 +21,11 @@ export interface IHttpOption<T = any> extends Omit<RequestInit, 'body'> {
 export interface IRequest<T = any> extends IHttpOption {
     url: RequestInfo | URL;
     data?: RequestInit['body'];
+    dispatcher?: new (arg: {
+        connect: {
+            rejectUnauthorized: boolean;
+        };
+    }) => T;
 }
 export interface IHttpClientResponse<T = any> extends Response {
     data: T;
