@@ -61,15 +61,12 @@ class FetchAxios {
     }
     let toReturn = {
       data,
-      headers: {},
+      headers: response.headers,
       ok: response.ok,
       status: response.status,
       config: this.reqConfig,
       statusText: response.statusText
     };
-    response.headers.forEach((value, name) => {
-      toReturn.headers[name] = value;
-    });
     for (const interceptor of this.responseInterceptors) {
       toReturn = await interceptor(toReturn);
     }
