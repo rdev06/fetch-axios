@@ -20,19 +20,22 @@ export interface IHttpOption<T = any> extends Omit<RequestInit, 'body'> {
     dispatcher?: any;
 }
 export interface IRequest<T = any> extends IHttpOption {
-    url: RequestInfo | URL;
+    url: RequestInfo;
     data?: RequestInit['body'];
 }
 export interface IHttpClientResponse<T = any> extends Response {
     data: T;
 }
-export type CallBackFn = (interceptdata: Request | IHttpClientResponse) => Object | Promise<Object>;
+export type InterceptRequest = RequestInit & {
+    url?: RequestInfo;
+};
+export type CallBackFn = (interceptdata: InterceptRequest) => InterceptRequest | Promise<InterceptRequest> | void;
 export interface IHttpClient {
-    get<T = any>(url: RequestInfo | URL, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
-    post<T = any>(url: RequestInfo | URL, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
-    patch<T = any>(url: RequestInfo | URL, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
-    put<T = any>(url: RequestInfo | URL, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
-    delete<T = any>(url: RequestInfo | URL, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+    get<T = any>(url: RequestInfo, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+    post<T = any>(url: RequestInfo, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+    patch<T = any>(url: RequestInfo, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+    put<T = any>(url: RequestInfo, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+    delete<T = any>(url: RequestInfo, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
     request<T = any>(options: IRequest<T>): Promise<IHttpClientResponse<T>>;
     interceptors: {
         request: {
@@ -46,7 +49,6 @@ export interface IHttpClient {
 export default class FetchAxios implements IHttpClient {
     private requestInterceptors;
     private responseInterceptors;
-    private reqConfig;
     interceptors: {
         request: {
             use: (interceptor: CallBackFn) => void;
@@ -59,10 +61,10 @@ export default class FetchAxios implements IHttpClient {
     private processResponse;
     private handelUnknownResponse;
     private performFetch;
-    get<T = any>(url: RequestInfo | URL, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
-    post<T = any>(url: RequestInfo | URL, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
-    patch<T = any>(url: RequestInfo | URL, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
-    put<T = any>(url: RequestInfo | URL, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
-    delete<T = any>(url: RequestInfo | URL, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+    get<T = any>(url: RequestInfo, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+    post<T = any>(url: RequestInfo, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+    patch<T = any>(url: RequestInfo, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+    put<T = any>(url: RequestInfo, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+    delete<T = any>(url: RequestInfo, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
     request<T = any>(options: IRequest<T>): Promise<IHttpClientResponse<T>>;
 }

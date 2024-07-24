@@ -21,7 +21,6 @@ var HTTP_RESPONSE_TYPE;
 class FetchAxios {
   requestInterceptors = [];
   responseInterceptors = [];
-  reqConfig = {};
   interceptors = {
     request: {
       use: (interceptor) => {
@@ -34,17 +33,21 @@ class FetchAxios {
       }
     }
   };
-  async processRequest(request) {
+  async processRequest(url, init) {
+    init.url = url;
     for (const interceptor of this.requestInterceptors) {
-      request = await interceptor(request);
+      const newRequest = await interceptor(init);
+      if (!!newRequest && "url" in newRequest) {
+        Object.assign(init, newRequest);
+      }
     }
-    const configKeys = Object.keys(request);
-    for (const k of configKeys) {
-      this.reqConfig[k] = request[k];
+    if (typeof init.body === "object" || init.headers?.["Content-Type"] === "application/json") {
+      init.headers["Content-Type"] = "application/json";
+      init.body = JSON.stringify(init.body);
     }
-    return request;
+    return new Request(init.url, init);
   }
-  async processResponse(response, options) {
+  async processResponse(request, response, options) {
     let data = null;
     if (response.ok) {
       if (options?.responseType) {
@@ -64,9 +67,12 @@ class FetchAxios {
       headers: response.headers,
       ok: response.ok,
       status: response.status,
-      config: this.reqConfig,
+      config: { ...request },
       statusText: response.statusText
     };
+    for (const toDel of ["body", "headers", "method", "url"]) {
+      delete toReturn.config[toDel];
+    }
     for (const interceptor of this.responseInterceptors) {
       toReturn = await interceptor(toReturn);
     }
@@ -92,17 +98,12 @@ class FetchAxios {
     if (!init.headers) {
       init.headers = {};
     }
-    if (typeof data === "object" || options.headers?.["Content-Type"] === "application/json") {
-      options.headers["Content-Type"] = "application/json";
-      init.body = JSON.stringify(data);
-    }
-    const request = new Request(url, init);
-    const processedRequest = await this.processRequest(request);
     try {
-      const response = await fetch(processedRequest, options);
-      return this.processResponse(response, options);
+      const request = await this.processRequest(url, init);
+      const response = await fetch(request);
+      return this.processResponse(init, response, options);
     } catch (error) {
-      return this.processResponse({
+      return this.processResponse(init, {
         ok: false,
         headers: [],
         status: 500,

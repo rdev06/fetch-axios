@@ -23,7 +23,7 @@ export interface IHttpOption<T = any> extends Omit<RequestInit, 'body'> {
 }
 
 export interface IRequest<T = any> extends IHttpOption {
-  url: RequestInfo | URL;
+  url: RequestInfo;
   data?: RequestInit['body'];
 }
 
@@ -31,14 +31,16 @@ export interface IHttpClientResponse<T = any> extends Response {
   data: T;
 }
 
-export type CallBackFn = (interceptdata: Request | IHttpClientResponse) => Object | Promise<Object>;
+export type InterceptRequest = RequestInit & {url?: RequestInfo};
+
+export type CallBackFn = (interceptdata: InterceptRequest) => InterceptRequest | Promise<InterceptRequest> | void;
 
 export interface IHttpClient {
-  get<T = any>(url: RequestInfo | URL, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
-  post<T = any>(url: RequestInfo | URL, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
-  patch<T = any>(url: RequestInfo | URL, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
-  put<T = any>(url: RequestInfo | URL, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
-  delete<T = any>(url: RequestInfo | URL, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+  get<T = any>(url: RequestInfo, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+  post<T = any>(url: RequestInfo, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+  patch<T = any>(url: RequestInfo, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+  put<T = any>(url: RequestInfo, body: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
+  delete<T = any>(url: RequestInfo, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>>;
   request<T = any>(options: IRequest<T>): Promise<IHttpClientResponse<T>>;
   interceptors: {
     request: { use: (interceptor: CallBackFn) => void };
@@ -49,7 +51,6 @@ export interface IHttpClient {
 export default class FetchAxios implements IHttpClient {
   private requestInterceptors: CallBackFn[] = [];
   private responseInterceptors: CallBackFn[] = [];
-  private reqConfig: any = {};
   public interceptors = {
     request: {
       use: (interceptor: CallBackFn) => {
@@ -63,18 +64,23 @@ export default class FetchAxios implements IHttpClient {
     }
   };
 
-  private async processRequest(request: Request | any): Promise<Request> {
+  private async processRequest(url: RequestInfo, init: InterceptRequest): Promise<Request> {
+    init.url = url;
     for (const interceptor of this.requestInterceptors) {
-      request = await interceptor(request);
+      const newRequest = await interceptor(init);
+      if(!!newRequest && 'url' in newRequest){
+        Object.assign(init, newRequest)
+      }
     }
-    const configKeys = Object.keys(request);
-    for (const k of configKeys) {
-      this.reqConfig[k] = request[k];
+
+    if (typeof init.body === 'object' || init.headers?.['Content-Type'] === 'application/json') {
+      init.headers['Content-Type'] = 'application/json';
+      init.body = JSON.stringify(init.body);
     }
-    return request;
+    return new Request(init.url, init);
   }
 
-  private async processResponse<T>(response: Response & { data?: any }, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
+  private async processResponse<T>(request: RequestInit, response: Response & { data?: any }, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
     let data: any = null;
     if (response.ok) {
       if (options?.responseType) {
@@ -94,9 +100,12 @@ export default class FetchAxios implements IHttpClient {
       headers: response.headers,
       ok: response.ok,
       status: response.status,
-      config: this.reqConfig,
+      config: {...request},
       statusText: response.statusText
     };
+    for (const toDel of ['body', 'headers', 'method', 'url']) {
+      delete toReturn.config[toDel]
+    }
     for (const interceptor of this.responseInterceptors) {
       toReturn = await interceptor(toReturn);
     }
@@ -118,7 +127,7 @@ export default class FetchAxios implements IHttpClient {
   }
 
   private async performFetch<T>(
-    url: RequestInfo | URL,
+    url: RequestInfo,
     options: IHttpOption<T> = { responseType: HTTP_RESPONSE_TYPE.json },
     method?: HTTP_METHOD,
     data?: any
@@ -130,20 +139,12 @@ export default class FetchAxios implements IHttpClient {
     if (!init.headers) {
       init.headers = {};
     }
-
-    if (typeof data === 'object' || options.headers?.['Content-Type'] === 'application/json') {
-      options.headers['Content-Type'] = 'application/json';
-      init.body = JSON.stringify(data);
-    }
-
-    const request = new Request(url, init);
-    const processedRequest = await this.processRequest(request);
-
     try {
-      const response: any = await fetch(processedRequest, options);
-      return this.processResponse<T>(response, options);
+      const request = await this.processRequest(url, init);
+      const response: any = await fetch(request);
+      return this.processResponse<T>(init, response, options);
     } catch (error) {
-      return this.processResponse(
+      return this.processResponse(init,
         {
           ok: false,
           //@ts-ignore
@@ -162,23 +163,23 @@ export default class FetchAxios implements IHttpClient {
     }
   }
 
-  public async get<T = any>(url: RequestInfo | URL, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
+  public async get<T = any>(url: RequestInfo, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
     return this.performFetch(url, options, HTTP_METHOD.GET);
   }
 
-  public async post<T = any>(url: RequestInfo | URL, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
+  public async post<T = any>(url: RequestInfo, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
     return this.performFetch(url, options, HTTP_METHOD.POST, data);
   }
 
-  public async patch<T = any>(url: RequestInfo | URL, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
+  public async patch<T = any>(url: RequestInfo, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
     return this.performFetch(url, options, HTTP_METHOD.PATCH, data);
   }
 
-  public async put<T = any>(url: RequestInfo | URL, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
+  public async put<T = any>(url: RequestInfo, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
     return this.performFetch(url, options, HTTP_METHOD.PUT, data);
   }
 
-  public async delete<T = any>(url: RequestInfo | URL, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
+  public async delete<T = any>(url: RequestInfo, data: any, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
     return this.performFetch(url, options, HTTP_METHOD.DELETE, data);
   }
 
