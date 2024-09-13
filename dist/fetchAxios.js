@@ -41,7 +41,7 @@ class FetchAxios {
         Object.assign(init, newRequest);
       }
     }
-    if (!init.headers) {
+    if (!init.headers || !init.headers["Content-Type"]) {
       init.headers["Content-Type"] = "application/json";
       init.body = JSON.stringify(init.body);
     }

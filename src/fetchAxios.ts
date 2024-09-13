@@ -73,7 +73,7 @@ export default class FetchAxios implements IHttpClient {
       }
     }
 
-    if (!init.headers) {
+    if (!init.headers || !init.headers["Content-Type"]) {
       init.headers["Content-Type"] = "application/json";
       init.body = JSON.stringify(init.body);
     }
