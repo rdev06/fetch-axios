@@ -41,9 +41,14 @@ class FetchAxios {
         Object.assign(init, newRequest);
       }
     }
-    if (!init.headers || !init.headers["Content-Type"]) {
-      init.headers["Content-Type"] = "application/json";
+    if (!!init.body && typeof init.body === "object" && (!init.headers || !init.headers["Content-Type"] || init.headers["Content-Type"] === "application/json")) {
+      if (!init.headers)
+        init.headers = {};
+      if (!init.headers["Content-Type"])
+        init.headers["Content-Type"] = "application/json";
       init.body = JSON.stringify(init.body);
+    } else if (!!init.headers) {
+      delete init.headers["Content-Type"];
     }
     return new Request(init.url, init);
   }
@@ -95,6 +100,7 @@ class FetchAxios {
   async performFetch(url, options = { responseType: "json" /* json */ }, method, data) {
     options = { ...options };
     const init = Object.assign(options, { body: data });
+    delete init.data;
     if (method) {
       init.method = method;
     }

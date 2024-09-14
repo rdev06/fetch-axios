@@ -19,7 +19,7 @@ export const enum HTTP_RESPONSE_TYPE {
 export interface IHttpOption<T = any> extends Omit<RequestInit, 'body'> {
   responseType: HTTP_RESPONSE_TYPE;
   responseDataType?: T;
-  dispatcher?: any
+  dispatcher?: any;
 }
 
 export interface IRequest<T = any> extends IHttpOption {
@@ -31,7 +31,7 @@ export interface IHttpClientResponse<T = any> extends Response {
   data: T;
 }
 
-export type InterceptRequest = RequestInit & {url?: RequestInfo};
+export type InterceptRequest = RequestInit & { url?: RequestInfo };
 
 export type CallBackFn = (interceptdata: InterceptRequest) => InterceptRequest | Promise<InterceptRequest> | void;
 
@@ -68,19 +68,26 @@ export default class FetchAxios implements IHttpClient {
     init.url = url;
     for (const interceptor of this.requestInterceptors) {
       const newRequest = await interceptor(init);
-      if(!!newRequest && 'url' in newRequest){
-        Object.assign(init, newRequest)
+      if (!!newRequest && 'url' in newRequest) {
+        Object.assign(init, newRequest);
       }
     }
 
-    if (!init.headers || !init.headers["Content-Type"]) {
-      init.headers["Content-Type"] = "application/json";
+    if (!!init.body && typeof init.body === 'object' && (!init.headers || !init.headers['Content-Type'] || init.headers['Content-Type'] === 'application/json')) {
+      if (!init.headers) init.headers = {};
+      if (!init.headers['Content-Type']) init.headers['Content-Type'] = 'application/json';
       init.body = JSON.stringify(init.body);
+    } else if (!!init.headers) {
+      delete init.headers['Content-Type'];
     }
     return new Request(init.url, init);
   }
 
-  private async processResponse<T>(request: RequestInit, response: Response & { data?: any }, options?: IHttpOption<T>): Promise<IHttpClientResponse<T>> {
+  private async processResponse<T>(
+    request: RequestInit,
+    response: Response & { data?: any },
+    options?: IHttpOption<T>
+  ): Promise<IHttpClientResponse<T>> {
     let data: any = null;
     if (response.ok) {
       if (options?.responseType) {
@@ -94,7 +101,7 @@ export default class FetchAxios implements IHttpClient {
       } else {
         data = await this.handelUnknownResponse(response);
       }
-    }else{
+    } else {
       data = response.data || (await this.handelUnknownResponse(response));
     }
     let toReturn: IHttpClientResponse<T> | any = {
@@ -102,11 +109,11 @@ export default class FetchAxios implements IHttpClient {
       headers: response.headers,
       ok: response.ok,
       status: response.status,
-      config: {...request},
+      config: { ...request },
       statusText: response.statusText
     };
     for (const toDel of ['body', 'headers', 'method', 'url']) {
-      delete toReturn.config[toDel]
+      delete toReturn.config[toDel];
     }
 
     for (const interceptor of this.responseInterceptors) {
@@ -135,8 +142,9 @@ export default class FetchAxios implements IHttpClient {
     method?: HTTP_METHOD,
     data?: any
   ): Promise<IHttpClientResponse<T>> {
-    options = {...options} // deep copy
-    const init: RequestInit = Object.assign(options, { body: data });
+    options = { ...options }; // deep copy
+    const init: RequestInit & {data?: RequestInit['body']} = Object.assign(options, { body: data });
+    delete init.data;
     if (method) {
       init.method = method;
     }
@@ -148,7 +156,8 @@ export default class FetchAxios implements IHttpClient {
       const response: any = await fetch(request);
       return this.processResponse<T>(init, response, options);
     } catch (error) {
-      return this.processResponse(init,
+      return this.processResponse(
+        init,
         {
           ok: false,
           //@ts-ignore
