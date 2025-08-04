@@ -172,7 +172,7 @@ export default class FetchAxios implements IHttpClient {
           data: {
             message: error.message,
             name: error.name,
-            code: error.code,
+            code: error.code || error.cause.code,
             path: error.path
           }
         },

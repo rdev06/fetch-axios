@@ -93,8 +93,7 @@ class FetchAxios {
     try {
       text = await response.text();
       text = JSON.parse(text);
-    } catch (e) {
-    }
+    } catch (e) {}
     return text;
   }
   async performFetch(url, options = { responseType: "json" /* json */ }, method, data) {
@@ -120,7 +119,7 @@ class FetchAxios {
         data: {
           message: error.message,
           name: error.name,
-          code: error.code,
+          code: error.code || error.cause.code,
           path: error.path
         }
       }, options);

@@ -1,5 +1,5 @@
 import {
-FetchAxios
+  FetchAxios
 } from "./fetchAxios.js";
 
 // src/index.ts
